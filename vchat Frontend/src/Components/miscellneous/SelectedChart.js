@@ -10,6 +10,9 @@ import UpdatechatModel from './UpdatechatModel';
 import { useToast } from '@chakra-ui/react'
 import ScrollableChat from './ScrollableChat'
 
+import { io } from "socket.io-client";
+const endpoint = "http://localhost:5000";
+var socket,selectedchatCompare;
 
 const SelectedChart = (props) => {
    const  {fetchagain,setfetchagain}=props
@@ -18,8 +21,19 @@ const SelectedChart = (props) => {
    const [messages,setmessages] = useState([])
     const [loading,setloading] = useState(false)
     const [newmessage,setnewmessage] = useState("")
+    const [socketConnection,setSocketConnection] = useState(false)
 
     const Toast = useToast();
+
+    useEffect(() => {
+      socket = io(endpoint);
+      socket.emit("setup", user);
+      socket.on("connected", () => {
+        setSocketConnection(true);
+        console.log("connected");
+      });
+      // eslint-disable-next-line
+    }, [])
   
     const fetchmessages = async () => {
       if(!selectedchat) return;
@@ -33,9 +47,13 @@ const SelectedChart = (props) => {
           },
         });
         const data = await res.json();
-        console.log(data);
+        // console.log(data);
         setmessages(data.messages);
         setloading(false);
+        if(socketConnection){
+          socket.emit("join chat", selectedchat._id);
+          console.log("joined chat");
+        }
       } catch (err) {
         Toast({
           title: "Error Occured",
@@ -49,9 +67,23 @@ const SelectedChart = (props) => {
     
     useEffect(() => {
       if(selectedchat){
+        selectedchatCompare=selectedchat
         fetchmessages()
       }
+      // eslint-disable-next-line
     }, [selectedchat])
+
+    useEffect(() => {
+      socket.on("message received", (newMessagerecieved) => {
+        if(!selectedchat || selectedchatCompare._id !== newMessagerecieved.chat._id){
+          //Notification
+        }
+        else{
+          console.log(newMessagerecieved,1);
+          setmessages(prev => [...prev,newMessagerecieved])
+        }
+      });
+    },[selectedchat, socketConnection])
 
     const sendMessage = async (e) => {
       if(e.key === "Enter" && newmessage !== "") {
@@ -68,7 +100,9 @@ const SelectedChart = (props) => {
           const data = await res.json();
           console.log(data);
           setnewmessage("");
+          socket.emit("new message", data.newmessage);
           setmessages([...messages,data.newmessage]);
+          
         } catch (err) {
           Toast({
             title: "Error Occured",

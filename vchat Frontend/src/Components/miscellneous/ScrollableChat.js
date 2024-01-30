@@ -1,7 +1,6 @@
 import React from 'react'
 import { useContext } from 'react'
 import { ChatContext } from '../../Context/Chatprovider'
-import { Box, Text } from '@chakra-ui/react'
 import ScrollableFeed from 'react-scrollable-feed'
 import { Avatar, Tooltip } from '@chakra-ui/react'
 import { isLastMessage, isSameSender,isSameUser,isSameSenderMargin } from '../../config/chatlogics'
