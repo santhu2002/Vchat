@@ -17,7 +17,7 @@ import UpdatechatModel from "./UpdatechatModel";
 import { useToast } from "@chakra-ui/react";
 import ScrollableChat from "./ScrollableChat";
 import Lottie from "react-lottie";
-import { Socket, io } from "socket.io-client";
+import { io } from "socket.io-client";
 const endpoint = "http://localhost:5000";
 var socket, selectedchatCompare;
 
@@ -81,7 +81,7 @@ const SelectedChart = (props) => {
       setmessages(data.messages);
       setloading(false);
       if (socketConnection) {
-        socket.emit("join chat", selectedchat._id);
+        socket.emit("join chat", selectedchat);
         console.log("joined chat");
       }
     } catch (err) {
@@ -107,8 +107,9 @@ const SelectedChart = (props) => {
 
   useEffect(() => {
     socket.on("message received", (newMessagerecieved) => {
+      // console.log(selectedchat._id, newMessagerecieved.chat._id);
       if (
-        !selectedchat ||
+        !selectedchatCompare ||
         selectedchatCompare._id !== newMessagerecieved.chat._id
       ) {
         if (!Notifications.includes(newMessagerecieved)) {
@@ -120,7 +121,10 @@ const SelectedChart = (props) => {
         setmessages((prev) => [...prev, newMessagerecieved]);
       }
     });
-  }, [selectedchat, socketConnection]);
+    return () => {
+      socket.off("message received");
+    };
+  }, [socketConnection]);
 
   const sendMessage = async (e) => {
     if (e.key === "Enter" && newmessage !== "") {
@@ -228,16 +232,14 @@ const SelectedChart = (props) => {
 
             <FormControl isRequired mt="3" onKeyDown={sendMessage}>
               {istyping ? (
-                <div>
-                  <Lottie
-                    options={defaultOptions}
-                    height={50}
-                    width={50}
-                    style={{
-                      margingbottom: "15px",
-                      marginLeft: "0px",
-                    }}
-                  />
+                <div
+                  style={{
+                    marginBottom: "15px",
+                    marginLeft: "0px",
+                    width: "50px",
+                  }}
+                >
+                  <Lottie options={defaultOptions} height={50} width={50} />
                 </div>
               ) : (
                 <></>

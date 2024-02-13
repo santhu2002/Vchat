@@ -25,7 +25,7 @@ const server = app.listen(port, () => {
 });
 
 const io = require("socket.io")(server, {
-  PingTimeout: 60000,
+  PingTimeout: 6000,
   cors: {
     origin: "*",
   },
@@ -40,8 +40,8 @@ io.on("connection", (socket) => {
   });
 
   socket.on("join chat", (room) => {
-    socket.join(room);
-    console.log("User Joined " + room);
+    socket.join(room._id);
+    console.log("User Joined " + room._id);
   });
 
   socket.on("typing", (room) => socket.in(room).emit("typing"));
@@ -53,12 +53,12 @@ io.on("connection", (socket) => {
 
     chat.users.forEach((user) => {
       if (user._id == newMessage.sender._id) return;
-      console.log(user._id, newMessage);
+      // console.log(user._id, newMessage);
       socket.in(user._id).emit("message received", newMessage);
     });
   });
 
-  socket.off("setup", () => {
+  socket.off("setup", (userData) => {
     console.log("USER DISCONNECTED");
     socket.leave(userData._id);
   });
