@@ -23,7 +23,13 @@ var socket, selectedchatCompare;
 
 const SelectedChart = (props) => {
   const { fetchagain, setfetchagain } = props;
-  const { selectedchat, setselectedchat, user } = useContext(ChatContext);
+  const {
+    selectedchat,
+    setselectedchat,
+    user,
+    Notifications,
+    setNotifications,
+  } = useContext(ChatContext);
 
   const [messages, setmessages] = useState([]);
   const [loading, setloading] = useState(false);
@@ -97,13 +103,18 @@ const SelectedChart = (props) => {
     // eslint-disable-next-line
   }, [selectedchat]);
 
+  // console.log(Notifications,"............");
+
   useEffect(() => {
     socket.on("message received", (newMessagerecieved) => {
       if (
         !selectedchat ||
         selectedchatCompare._id !== newMessagerecieved.chat._id
       ) {
-        //Notification
+        if (!Notifications.includes(newMessagerecieved)) {
+          setNotifications([...Notifications, newMessagerecieved]);
+          setfetchagain(!fetchagain);
+        }
       } else {
         console.log(newMessagerecieved, 1);
         setmessages((prev) => [...prev, newMessagerecieved]);
